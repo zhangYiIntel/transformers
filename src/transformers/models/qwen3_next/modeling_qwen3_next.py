@@ -735,29 +735,40 @@ class Qwen3NextGatedDeltaNet(nn.Module):
             query = query.repeat_interleave(self.num_v_heads // self.num_k_heads, dim=2)
             key = key.repeat_interleave(self.num_v_heads // self.num_k_heads, dim=2)
 
-        if not use_precomputed_states:
-            core_attn_out, last_recurrent_state = self.chunk_gated_delta_rule(
-                query,
-                key,
-                value,
-                g=g,
-                beta=beta,
-                initial_state=None,
-                output_final_state=cache_params is not None,
-                use_qk_l2norm_in_kernel=True,
-            )
+        # if not use_precomputed_states:
+        #     core_attn_out, last_recurrent_state = self.chunk_gated_delta_rule(
+        #         query,
+        #         key,
+        #         value,
+        #         g=g,
+        #         beta=beta,
+        #         initial_state=None,
+        #         output_final_state=cache_params is not None,
+        #         use_qk_l2norm_in_kernel=True,
+        #     )
 
-        else:
-            core_attn_out, last_recurrent_state = self.recurrent_gated_delta_rule(
-                query,
-                key,
-                value,
-                g=g,
-                beta=beta,
-                initial_state=recurrent_state,
-                output_final_state=cache_params is not None,
-                use_qk_l2norm_in_kernel=True,
-            )
+        # else:
+        #     core_attn_out, last_recurrent_state = self.recurrent_gated_delta_rule(
+        #         query,
+        #         key,
+        #         value,
+        #         g=g,
+        #         beta=beta,
+        #         initial_state=recurrent_state,
+        #         output_final_state=cache_params is not None,
+        #         use_qk_l2norm_in_kernel=True,
+        #     )
+        # Notice: !!!! initial_state must be zeros for prefill satage
+        core_attn_out, last_recurrent_state = self.recurrent_gated_delta_rule(
+            query,
+            key,
+            value,
+            g=g,
+            beta=beta,
+            initial_state=recurrent_state,
+            output_final_state=cache_params is not None,
+            use_qk_l2norm_in_kernel=True,
+        )
 
         # Update cache
         if cache_params is not None:
